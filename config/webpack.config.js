@@ -99,7 +99,7 @@ module.exports = function (webpackEnv) {
   const shouldUseReactRefresh = env.raw.FAST_REFRESH
 
   // common function to get style loaders
-  const getStyleLoaders = (cssOptions, preProcessor, param) => {
+  const getStyleLoaders = (cssOptions, preProcessor, param = {}) => {
     const loaders = [
       isEnvDevelopment && require.resolve('style-loader'),
       isEnvProduction && {
@@ -405,7 +405,7 @@ module.exports = function (webpackEnv) {
                     {
                       libraryName: 'antd',
                       libraryDirectory: 'es',
-                      style: 'css',
+                      style: true,
                     },
                   ],
                   isEnvDevelopment && shouldUseReactRefresh && require.resolve('react-refresh/babel'),
@@ -477,13 +477,14 @@ module.exports = function (webpackEnv) {
                 },
               }),
             },
+
             // less loader
             {
               test: lessRegex,
-              exclude: lessModuleRegex,
+              exclude: sassModuleRegex,
               use: getStyleLoaders(
                 {
-                  importLoaders: 1,
+                  importLoaders: 3,
                   sourceMap: isEnvProduction ? shouldUseSourceMap : isEnvDevelopment,
                   modules: {
                     mode: 'icss',
@@ -492,7 +493,22 @@ module.exports = function (webpackEnv) {
                 'less-loader',
                 {
                   lessOptions: {
-                    modifyVars: { '@primary-color': '#1DA57A' },
+                    modifyVars: {
+                      '@primary-color': '#d2568c',
+                      '@link-color': '#1890ff', // 链接色
+                      '@success-color': '#52c41a', // 成功色
+                      '@warning-color': '#faad14', // 警告色
+                      '@error-color': '#f5222d', // 错误色
+                      '@font-size-base': '14px', // 主字号
+                      '@heading-color': 'rgba(0, 0, 0, 0.85)', // 标题色
+                      '@text-color': 'rgba(0, 0, 0, 0.65)', // 主文本色
+                      '@text-color-secondary': 'rgba(0, 0, 0, 0.45)', // 次文本色
+                      '@disabled-color': 'rgba(0, 0, 0, 0.25)', // 失效色
+                      '@border-radius-base': '2px', // 组件/浮层圆角
+                      '@border-color-base': '#d9d9d9', // 边框色
+                      '@box-shadow-base':
+                        '0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05)', // 浮层阴影
+                    },
                     javascriptEnabled: true,
                   },
                 }
@@ -503,8 +519,8 @@ module.exports = function (webpackEnv) {
               // See https://github.com/webpack/webpack/issues/6571
               sideEffects: true,
             },
-            // Adds support for CSS Modules (https://github.com/css-modules/css-modules)
-            // using the extension .module.css
+            // Adds support for CSS Modules, but using SASS
+            // using the extension .module.scss or .module.sass
             {
               test: lessModuleRegex,
               use: getStyleLoaders(
@@ -516,9 +532,31 @@ module.exports = function (webpackEnv) {
                     getLocalIdent: getCSSModuleLocalIdent,
                   },
                 },
-                'less-loader'
+                'less-loader',
+                {
+                  lessOptions: {
+                    modifyVars: {
+                      '@primary-color': '#d2568c',
+                      '@link-color': '#1890ff', // 链接色
+                      '@success-color': '#52c41a', // 成功色
+                      '@warning-color': '#faad14', // 警告色
+                      '@error-color': '#f5222d', // 错误色
+                      '@font-size-base': '14px', // 主字号
+                      '@heading-color': 'rgba(0, 0, 0, 0.85)', // 标题色
+                      '@text-color': 'rgba(0, 0, 0, 0.65)', // 主文本色
+                      '@text-color-secondary': 'rgba(0, 0, 0, 0.45)', // 次文本色
+                      '@disabled-color': 'rgba(0, 0, 0, 0.25)', // 失效色
+                      '@border-radius-base': '2px', // 组件/浮层圆角
+                      '@border-color-base': '#d9d9d9', // 边框色
+                      '@box-shadow-base':
+                        '0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05)', // 浮层阴影
+                    },
+                    javascriptEnabled: true,
+                  },
+                }
               ),
             },
+
             // Opt-in support for SASS (using .scss or .sass extensions).
             // By default we support SASS Modules with the
             // extensions .module.scss or .module.sass
