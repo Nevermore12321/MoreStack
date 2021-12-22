@@ -1,6 +1,5 @@
 import { Form, Input, Button, Checkbox } from 'antd'
 import { FC } from 'react'
-import './test.less'
 
 const Demo: FC = function Demo() {
   const onFinish = (values: any) => {

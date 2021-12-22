@@ -159,5 +159,14 @@
     "eslint-plugin-react": "^7.27.1",
     "eslint-plugin-react-hooks": "^4.3.0",
     "prettier": "^2.5.1"
+  },
+  "proxy": {
+    "/api": {
+      "target": "https://www.baidu.com",
+      "pathRewrite": {
+        "^/api": ""
+      },
+      "changeOrigin": true
+    }
   }
 }
