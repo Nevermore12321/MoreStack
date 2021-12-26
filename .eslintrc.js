@@ -18,11 +18,10 @@ module.exports = {
     },
     ecmaVersion: 13,
     sourceType: 'module',
-    tsconfigRootDir: __dirname,
     project: ['./tsconfig.json'],
   },
   plugins: ['react', '@typescript-eslint'],
-  ignorePatterns: ['.eslintrc.js', './config/*'],
+  ignorePatterns: ['.eslintrc.js', './src/assets/*'],
   rules: {
     '@typescript-eslint/no-explicit-any': ['off'],
     'no-console': 0,
@@ -36,6 +35,7 @@ module.exports = {
         jsx: 'never',
         ts: 'never',
         tsx: 'never',
+        png: 'never',
       },
     ],
     'react/jsx-filename-extension': [
@@ -58,6 +58,22 @@ module.exports = {
         paths: ['src'],
         extensions: ['.js', '.jsx', '.ts', '.tsx'],
       },
+      alias: {
+        map: [
+          ['@', './src/'],
+          ['@assets', './src/assets'],
+          ['@core', './src/core'],
+          ['@layouts', './src/layouts'],
+          ['@pages', './src/pages'],
+          ['@stores', './src/stores'],
+          ['@styles', './src/styles'],
+          ['@utils', './src/utils'],
+        ],
+        extensions: ['.tsx', '.ts', '.jsx', '.js'],
+      },
+    },
+    'import/parsers': {
+      '@typescript-eslint/parser': ['.ts', '.tsx'],
     },
   },
-}
+};

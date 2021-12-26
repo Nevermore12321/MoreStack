@@ -1,17 +1,19 @@
-import { Form, Input, Button, Checkbox } from 'antd'
-import { FC } from 'react'
+import { Form, Input, Button, Checkbox } from 'antd';
+import { FC } from 'react';
+import Logos from '@assets/logos/home-page-logo-229.png';
 
 const Demo: FC = function Demo() {
   const onFinish = (values: any) => {
-    console.log('Success:', values)
-  }
+    console.log('Success:', values);
+  };
 
   const onFinishFailed = (errorInfo: any) => {
-    console.log('Failed:', errorInfo)
-  }
+    console.log('Failed:', errorInfo);
+  };
 
   return (
     <div>
+      <img src={Logos} alt="" />
       <Form
         name="basic"
         labelCol={{ span: 8 }}
@@ -48,7 +50,7 @@ const Demo: FC = function Demo() {
         </Form.Item>
       </Form>
     </div>
-  )
-}
+  );
+};
 
-export default Demo
+export default Demo;

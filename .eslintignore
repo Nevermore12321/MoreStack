@@ -4,5 +4,3 @@ public/
 *.config.js
 .*lintrc.js
 /*.*
-config/*.*
-config/jest/*.*
