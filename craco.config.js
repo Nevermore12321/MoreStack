@@ -1,7 +1,7 @@
-const CracoLessPlugin = require('craco-less')
-const path = require('path')
+const CracoLessPlugin = require('craco-less');
+const path = require('path');
 
-const libraryDirectory = 'es'
+const libraryDirectory = 'es';
 module.exports = {
   babel: {
     plugins: [
@@ -65,6 +65,7 @@ module.exports = {
       '@stores': path.resolve(__dirname, 'src/stores'),
       '@styles': path.resolve(__dirname, 'src/styles'),
       '@utils': path.resolve(__dirname, 'src/utils'),
+      '@locales': path.resolve(__dirname, 'src/locales'),
     },
   },
-}
+};

@@ -68,6 +68,7 @@ module.exports = {
           ['@stores', './src/stores'],
           ['@styles', './src/styles'],
           ['@utils', './src/utils'],
+          ['@locales', './src/locales'],
         ],
         extensions: ['.tsx', '.ts', '.jsx', '.js'],
       },

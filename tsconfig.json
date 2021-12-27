@@ -11,6 +11,7 @@
       "@stores/*": ["src/stores/*"],
       "@styles/*": ["src/styles/*"],
       "@utils/*": ["src/utils/*"],
+      "@locales/*": ["./src/locales/*"],
     },
     "target": "es5",
     "lib": [
