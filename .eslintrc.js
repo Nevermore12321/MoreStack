@@ -28,6 +28,7 @@ module.exports = {
     'no-use-before-define': 'off',
     '@typescript-eslint/no-use-before-define': 'off',
     'import/prefer-default-export': 'off',
+    'import/no-unresolved': 'off',
     'import/extensions': [
       'error',
       {
@@ -36,6 +37,7 @@ module.exports = {
         ts: 'never',
         tsx: 'never',
         png: 'never',
+        svg: 'never',
       },
     ],
     'react/jsx-filename-extension': [
@@ -55,7 +57,7 @@ module.exports = {
   settings: {
     'import/resolver': {
       node: {
-        paths: ['src'],
+        paths: ['src', 'node_modules'],
         extensions: ['.js', '.jsx', '.ts', '.tsx'],
       },
       alias: {

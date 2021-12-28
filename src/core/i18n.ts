@@ -3,6 +3,7 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import enUsTrans from '@locales/en.json';
 import zhCnTrans from '@locales/zh.json';
+import { determineSelectedLocale } from '@utils/translate';
 
 void i18n
   .use(LanguageDetector)
@@ -10,10 +11,10 @@ void i18n
   .init({
     // import translate file
     resources: {
-      en: {
+      'en-GB': {
         translation: enUsTrans,
       },
-      zh: {
+      'zh-CN': {
         translation: zhCnTrans,
       },
     },
@@ -23,8 +24,20 @@ void i18n
     interpolation: {
       escapeValue: false, // not needed for react as it escapes by default
     },
+    detection: {
+      caches: ['localStorage', 'sessionStorage', 'cookie'],
+    },
   });
 
-i18n.changeLanguage(get);
+const currentLocale: string = determineSelectedLocale({
+  sessionStorageLocaleKey: 'i18nextLng',
+  cookieLocaleKey: 'i18nextLng',
+  localStorageLocaleKey: 'i18nextLng',
+});
+
+console.log(currentLocale);
+if (currentLocale !== '') {
+  void i18n.changeLanguage(currentLocale);
+}
 
 export default i18n;
