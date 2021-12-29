@@ -27,6 +27,7 @@ module.exports = {
     'no-console': 0,
     'no-use-before-define': 'off',
     '@typescript-eslint/no-use-before-define': 'off',
+    'react/jsx-props-no-spreading': 'off',
     'import/prefer-default-export': 'off',
     'import/no-unresolved': 'off',
     'import/extensions': [
