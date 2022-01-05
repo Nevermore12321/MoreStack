@@ -5,8 +5,8 @@ interface LocalStorageValue {
 
 /**
  * set key-value to the local storage, default Age is 10 days
- * @param {string} key Key name to store
- * @param {string} value Value to store
+ * @param {string} key Key name to stores
+ * @param {string} value Value to stores
  * @param {number} maxAge Option, How long does the key value expire
  * @param {number} expiry Option, key value expire time
  */
@@ -26,7 +26,7 @@ export const setLocalStorageItem = (key: string, value: string, maxAge = 8640000
 
 /**
  * get value from the local storage
- * @param {string} key Key name to store
+ * @param {string} key Key name to stores
  * @returns {string | null} get value string from local storage
  */
 export const getLocalStorageItem = (key: string): string | null => {

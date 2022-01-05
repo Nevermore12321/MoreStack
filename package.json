@@ -17,6 +17,8 @@
     "craco-less": "^2.0.0",
     "i18next": "^21.6.3",
     "i18next-browser-languagedetector": "^6.1.2",
+    "mobx": "^6.3.10",
+    "mobx-react": "^7.2.1",
     "rc-menu": "^9.1.1",
     "react": "^17.0.2",
     "react-document-title": "^2.0.3",

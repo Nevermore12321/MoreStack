@@ -1,7 +1,7 @@
 /**
  * set key-value to the cookie, default Age is 10 days
- * @param {string} key Key name to store
- * @param {string} value Value to store
+ * @param {string} key Key name to stores
+ * @param {string} value Value to stores
  * @param {time} time Option, How long does the key value expire
  */
 export const setCookie = function setCookie(key: string, value: string, time?: number | Date) {
@@ -25,7 +25,7 @@ export const setCookie = function setCookie(key: string, value: string, time?: n
 
 /**
  * get value from cookie
- * @param {string} param Key name to store
+ * @param {string} param Key name to stores
  * @returns {string | null} get value string from cookie
  */
 export function getCookie(param: string): string {
