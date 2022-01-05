@@ -1,28 +1,14 @@
-import { lazy } from 'react';
-import BlankBaseLayout from '@layouts/BlankBase';
-import { RoutesDef } from '@utils/routeRender';
+import { RouteObject, useRoutes } from 'react-router-dom';
+import AuthRoutes from '@pages/auth/Routes';
 
-// Dynamic load routing
-const Auth = lazy(() => import('@layouts/Auth'));
+const RootRoutes: RouteObject[] = [];
 
-const rootRoutes: RoutesDef[] = [
-  {
-    component: BlankBaseLayout,
-    routes: [
-      {
-        path: '/',
-        redirect: { from: '/', to: '/base/overview' },
-      },
-      {
-        path: '/login',
-        redirect: { from: '/login', to: '/auth/login' },
-      },
-      {
-        path: '/auth',
-        component: Auth,
-      },
-    ],
-  },
-];
+RootRoutes.push(AuthRoutes);
+console.log(RootRoutes);
 
-export default rootRoutes;
+function Router() {
+  console.log(useRoutes(RootRoutes));
+  return useRoutes(RootRoutes);
+}
+
+export default Router;

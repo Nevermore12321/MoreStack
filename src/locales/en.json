@@ -1,6 +1,13 @@
 {
+  "Forgot password": "Forgot password",
+  "Log in": "Log in",
+  "Login": "Login",
+  "MoreStack Cloud Management system": "MoreStack Cloud Management system",
+  "Password": "Password",
+  "Please input your Password!": "Please input your Password!",
+  "Please input your Username!": "Please input your Username!",
   "Remember me": "Remember me",
-  "Submit": "Submit",
+  "Username": "Username",
   "can not display picture": "can not display picture",
-  "this is a test": "this is a test"
+  "register now!": "register now!"
 }
