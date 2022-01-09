@@ -25,6 +25,7 @@ module.exports = {
   rules: {
     '@typescript-eslint/no-explicit-any': ['off'],
     'no-console': 0,
+    'no-param-reassign': 0,
     'no-use-before-define': 'off',
     '@typescript-eslint/no-use-before-define': 'off',
     'react/jsx-props-no-spreading': 'off',
