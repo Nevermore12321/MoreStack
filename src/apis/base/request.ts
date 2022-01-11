@@ -1,14 +1,19 @@
-import Axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import Axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, Method } from 'axios';
+import qs from 'qs';
 import { getLocalStorageItem } from '@utils/localStorage';
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'];
+
+interface RequestDef {
+  [methodName: string]: any;
+}
 
 /* *
  * @class AxiosHttpRequest
  * request with axios
  */
 export class AxiosHttpRequest {
-  public request: any;
+  public request: RequestDef;
 
   constructor() {
     this.request = {};
@@ -17,7 +22,7 @@ export class AxiosHttpRequest {
   /**
    * create a new instance of axios with a custom config
    */
-  private static createAxios = () => {
+  private createAxios = () => {
     const conf: AxiosRequestConfig = {
       baseURL: '/',
       headers: {
@@ -35,7 +40,7 @@ export class AxiosHttpRequest {
    * @param url request url
    * @returns {void}
    */
-  private static intercept = (axiosIns: AxiosInstance) => {
+  private intercept = (axiosIns: AxiosInstance) => {
     axiosIns.interceptors.request.use(
       (config: AxiosRequestConfig) => {
         // todo set all common header
@@ -77,13 +82,61 @@ export class AxiosHttpRequest {
    * @param {RequestConfigDef} config requests config
    * @returns {Promise} axios instance return promise
    */
-  private static buildRequest = (reqConfig: AxiosRequestConfig) => {
+  private genRequest = (reqConfig: AxiosRequestConfig) => {
     const method: string = reqConfig.method ? reqConfig.method.toLowerCase() : 'get';
+    const options = { ...reqConfig };
     if (reqConfig.params && ['get', 'head'].includes(method)) {
-      // todo Only get and head, we need to use null for some posts requests
+      // parse params to object
+      // 将 params 中的无用的 参数去掉
+      if (typeof options.params === 'object') {
+        interface ParamDef {
+          [paramName: string]: string;
+        }
+        const tmp = options.params as ParamDef;
+        options.params = Object.keys(options.params as object).reduce<ParamDef>((acc: ParamDef, curValue: string) => {
+          if (tmp[curValue] !== undefined && tmp[curValue] != null && tmp[curValue] !== '') {
+            acc[curValue] = tmp[curValue];
+          }
+          return acc;
+        }, {}) as object;
+      }
+      // 设置 param 的序列化格式
+      // repeat => 'a=b&a=c'
+      // comma => 'a=b,c'
+      // brackets => 'a[]=b&a[]=c'
+      // indices => 'a[0]=b&a[1]=c'
+      options.paramsSerializer = (p) => qs.stringify(p, { arrayFormat: 'repeat' });
     }
-    const instance = AxiosHttpRequest.createAxios();
-    AxiosHttpRequest.intercept(instance);
+    const instance = this.createAxios();
+    this.intercept(instance);
     return instance(reqConfig);
   };
+
+  public genReqMap = () => {
+    METHODS.forEach((method: string) => {
+      const standardMethod: Method = method.toLowerCase() as Method;
+      if (standardMethod === 'get' || standardMethod === 'head') {
+        this.request[standardMethod] = (url: string, params = {}, options = {}) =>
+          this.genRequest({
+            method: standardMethod,
+            url,
+            params,
+            ...options,
+          });
+      } else {
+        this.request[standardMethod] = (url: string, data = {}, params = {}, options = {}) =>
+          this.genRequest({
+            method: standardMethod,
+            url,
+            data,
+            params,
+            ...options,
+          });
+      }
+    });
+  };
 }
+
+const httpRequest = new AxiosHttpRequest();
+httpRequest.genReqMap();
+export default httpRequest;
