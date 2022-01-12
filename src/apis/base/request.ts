@@ -5,7 +5,7 @@ import { getLocalStorageItem } from '@utils/localStorage';
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'];
 
 interface RequestDef {
-  [methodName: string]: any;
+  [index: string]: (url: string, data?: object, params?: object, options?: object) => void;
 }
 
 /* *
@@ -37,7 +37,6 @@ export class AxiosHttpRequest {
   /**
    * Axios interceptors includes request & response
    * @param axiosIns instance of axios
-   * @param url request url
    * @returns {void}
    */
   private intercept = (axiosIns: AxiosInstance) => {
@@ -79,7 +78,7 @@ export class AxiosHttpRequest {
 
   /**
    * build request
-   * @param {RequestConfigDef} config requests config
+   * @param {AxiosRequestConfig} reqConfig requests config
    * @returns {Promise} axios instance return promise
    */
   private genRequest = (reqConfig: AxiosRequestConfig) => {
