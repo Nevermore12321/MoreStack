@@ -1,8 +1,8 @@
 import httpRequest from '@/apis/base/request';
 
 export interface ExtendOperationsDef {
-  subName: string; // 额外操作名称，
-  subKey: string; // 额外操作key，也就是 base url
+  otherName: string; // 额外操作名称，
+  otherKey: string; // 额外操作key，也就是 base url
   method?: string; // 额外操作的 method
   isDetail?: boolean; // 额外操作是否是获取详情, 如果是，需要 dept/deptid/user; 如果不是，需要 dept/user
   generateFunc?: (url: string, data: object, params: object, conf: object) => void; //  额外操作的具体请求实现
@@ -17,15 +17,28 @@ export interface ResourcesDef {
   extendOperations?: ExtendOperationsDef[]; // 额外操作
 }
 
-interface BaseRequestDef {
-  [requestName: string]: any;
+interface BaseResourceReqDef {
+  list?: (params?: object, conf?: object) => void;
+  listDetail?: (params?: object, conf?: object) => void;
+  show?: (id: string, params?: object, conf?: object) => void;
+  create?: (data: object, params?: object, conf?: object) => void;
+  update?: (id: string, data: object, params?: object, conf?: object) => void;
+  patch?: (id: string, data: object, args?: object) => void;
+  delete?: (id: string, args?: object) => void;
+  head?: (id: string, args?: object) => void;
+  responseKey?: string;
+  [name: string]: any;
+}
+
+interface ClientDef {
+  [index: string]: any;
 }
 
 /* *
  * @class BaseClient
  * API base Client wrapped all resource apis
  */
-export default class BaseClient {
+export default class BaseClient implements ClientDef {
   constructor() {
     this.genAllResource();
   }
@@ -102,13 +115,9 @@ export default class BaseClient {
    * @returns {} wrapped all methods of http requests for resource
    */
   private genResource = (resourceName: string, resourceKey: string, responseKey: string) => {
-    interface QueryFunc {
-      (params: object, conf: object): void;
-    }
-
     // resourceKey 用来添加 url
     const resourceUrl: string = resourceKey;
-    const resourceReq: { [name: string]: any } = {
+    const resourceReq: BaseResourceReqDef = {
       list: (params = {}, conf = {}) => this.request.get(resourceUrl, undefined, params, conf),
       listDetail: (params = {}, conf = {}) => this.request.get(`${resourceUrl}/detail`, undefined, params, conf),
       show: (id: string, params = {}, conf = {}) =>
@@ -127,35 +136,57 @@ export default class BaseClient {
     return resourceReq;
   };
 
+  private genSubResource = () => '';
+
+  private genSubSubResource = () => '';
+
   private genAllResource = () => {
     this.resources.forEach((resource: ResourcesDef) => {
       const { name, key, responseKey, subResources = [], isResource = true, extendOperations = [] } = resource;
       // 生成 获取 resource 的所有 request 接口，例如 get=>list create=>post ...
-      const result: BaseRequestDef = isResource ? this.genResource(name, key, responseKey) : {};
+      const result: BaseResourceReqDef = isResource ? this.genResource(name, key, responseKey) : {};
       // extendOperations 表示常用的这些操作外，还有什么具体的 request 请求
       extendOperations.forEach((operation: ExtendOperationsDef) => {
-        const { subKey, subName, method = 'get', isDetail, generateFunc } = operation;
+        const { otherKey, otherName, method = 'get', isDetail, generateFunc } = operation;
 
         const subIsDetail = !!isDetail;
         if (generateFunc) {
           //  这里是 定义好的 request 函数
-          result[subName] = generateFunc;
+          result[otherName] = generateFunc;
         } else if (subIsDetail) {
           //  获取 详情页的 子资源 的 request 函数
-          result[subName] = (id: string, ...args: object[]) =>
+          result[otherName] = (id: string, args?: object) =>
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-return
-            this.request[method.toLowerCase()](this.getSubResourceUrlById(id, name, subName), ...args);
+            this.request[method.toLowerCase()](this.getSubResourceUrlById(id, name, otherName), args);
         } else {
           //  获取 子资源的 request 函数
-          result[subName] = (...args: object[]) =>
+          result[otherName] = (...args: object[]) =>
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-return
-            this.request[method.toLowerCase()](this.getSubResourceUrl(name, subName), ...args);
+            this.request[method.toLowerCase()](this.getSubResourceUrl(name, otherName), ...args);
         }
       });
       //  subResource 表示 资源下的子资源，url 有嵌套关系，例如 部门/用户
+      //  最多嵌套两个 subResource /部门/用户/配额
       subResources.forEach((subResource) => {
-        const { name: sub } = subResource;
+        let subResult: BaseResourceReqDef;
+        const {
+          name: subName,
+          key: subKey,
+          responseKey: subResponseKey,
+          subResources: subSubResources = [],
+        } = subResource;
+        subResult = this.genSubSubResource(key, subKey, subResponseKey);
+
+        //  二级  子资源
+        subSubResources.forEach((son) => {
+          const { name: subSubName, key: subSubKey, responseKey: subSubResponseKey } = son;
+          subResult[subSubName] = this.generateSubSonResource(key, subKey, subSubKey, subSubResponseKey);
+        });
+        result[subName] = subResult;
       });
+
+      // 将生成的各个资源的 request 请求，放到 baseClient 类的属性中
+      this[name] = result;
     });
   };
 }
