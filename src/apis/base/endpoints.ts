@@ -1,5 +1,5 @@
 interface EndpointVersionDef {
-  [endpintName: string]: string;
+  [versionName: string]: string;
 }
 interface BaseEndpointDef {
   [endpintName: string]: string;
@@ -9,14 +9,8 @@ export const endpointVersionMap: EndpointVersionDef = {
   identityManagement: 'v1',
 };
 
-export const endpointsDefault = {
-  ironic: '/api/openstack/ironic',
-  ironicInspector: '/api/openstack/ironic-inspector',
-  octavia: '/api/openstack/octavia',
-};
-
 export const baseEndpointsMap: BaseEndpointDef = {
-  identityManagement: '/api/idm',
+  userManagement: '/api/morestack/idm',
 };
 
 const getOriginEndpoint = (key: string) => {
@@ -25,4 +19,4 @@ const getOriginEndpoint = (key: string) => {
   return version ? `${baseEndpoint}/${version}` : baseEndpoint;
 };
 
-export const userBase = () => getOriginEndpoint('identityManagement');
+export const userBase: string = getOriginEndpoint('userManagement');

@@ -3,12 +3,19 @@ import { Form, Input, Button, Checkbox } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import './index.less';
+import userClient from '@apis/user';
+import { BaseResourceReqDef } from '@apis/base/reqestTypes';
+import { clickOptions } from '@testing-library/user-event/dist/click';
 
 const Login: React.FC = function Login() {
   const onFinish = (values: any) => {
     console.log('Received values of form: ', values);
   };
   const { t } = useTranslation();
+
+  console.log(userClient);
+  const client: BaseResourceReqDef = userClient.allResources.catalog;
+  const test = client.list?.();
 
   return (
     <div className="login_form">

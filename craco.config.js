@@ -67,6 +67,7 @@ module.exports = {
       '@styles': path.resolve(__dirname, 'src/styles'),
       '@utils': path.resolve(__dirname, 'src/utils'),
       '@locales': path.resolve(__dirname, 'src/locales'),
+      '@apis': path.resolve(__dirname, 'src/apis'),
     },
   },
 };

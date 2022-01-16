@@ -1,44 +1,20 @@
 import httpRequest from '@/apis/base/request';
-
-export interface ExtendOperationsDef {
-  otherName: string; // 额外操作名称，
-  otherKey: string; // 额外操作key，也就是 base url
-  method?: string; // 额外操作的 method
-  isDetail?: boolean; // 额外操作是否是获取详情, 如果是，需要 dept/deptid/user; 如果不是，需要 dept/user
-  generateFunc?: (url: string, data: object, params: object, conf: object) => void; //  额外操作的具体请求实现
-}
-
-export interface ResourcesDef {
-  name: string; //  资源名称，也就是获取的数据，例如 user
-  key: string; //  资源key，也就是 base url
-  responseKey: string; //  相应的 key
-  subResources?: ResourcesDef[]; // 在父资源下的资源类型，也就是 父资源/子资源
-  isResource?: boolean; // 是否是 资源类型
-  extendOperations?: ExtendOperationsDef[]; // 额外操作
-}
-
-interface BaseResourceReqDef {
-  list?: (params?: object, conf?: object) => void;
-  listDetail?: (params?: object, conf?: object) => void;
-  show?: (id: string, params?: object, conf?: object) => void;
-  create?: (data: object, params?: object, conf?: object) => void;
-  update?: (id: string, data: object, params?: object, conf?: object) => void;
-  patch?: (id: string, data: object, args?: object) => void;
-  delete?: (id: string, args?: object) => void;
-  head?: (id: string, args?: object) => void;
-  responseKey?: string;
-  [name: string]: any;
-}
-
-interface ClientDef {
-  [index: string]: any;
-}
+import {
+  ExtendOperationsDef,
+  ResourcesDef,
+  BaseResourceReqDef,
+  BaseSubResourceReqDef,
+  BaseSubSonResourceReqDef,
+  AllResourceDef,
+} from './reqestTypes';
 
 /* *
  * @class BaseClient
  * API base Client wrapped all resource apis
  */
-export default class BaseClient implements ClientDef {
+export default class BaseClient {
+  public allResources: AllResourceDef = {};
+
   constructor() {
     this.genAllResource();
   }
@@ -57,31 +33,68 @@ export default class BaseClient implements ClientDef {
 
   // 该 client 的 base url
   get baseUrl() {
-    return '';
+    return '' as string;
   }
+
+  // ==========url 的 拼接============
 
   // 获取 具体 resource 的 detail 详细信息
   // 类似 用户 gsh 的详细信息为： /user/userid 或者 /user/userName
-  public getDetailUrl = (id: string, resourceName: string) => {
-    if (resourceName[resourceName.length - 1] === '/')
-      return `${resourceName.substring(0, resourceName.length - 1)}/${id}`;
-    return `${resourceName}/${id}`;
+  public getDetailUrl = (id: string, resourceKey: string) => {
+    if (resourceKey[resourceKey.length - 1] === '/') return `${resourceKey.substring(0, resourceKey.length - 1)}/${id}`;
+    return `${resourceKey}/${id}`;
   };
 
-  getSubResourceUrl(resourceName: string, subResourceName: string) {
-    if (resourceName[resourceName.length - 1] === '/') {
-      return `${resourceName}${subResourceName}`;
+  //  获取 resource 下的子 resource 的url
+  // 例如 部门下的用户 ，dept/deptid/users
+  getSubResourceUrl(resourceKey: string, subResourceKey: string) {
+    if (resourceKey[resourceKey.length - 1] === '/') {
+      return `${resourceKey}${subResourceKey}`;
     }
-    return `${resourceName}/${subResourceName}`;
+    return `${resourceKey}/${subResourceKey}`;
   }
 
   //  获取 resource 下的子 resource 的url
   // 例如 部门下的用户 ，dept/deptid/users
-  public getSubResourceUrlById(id: string, resourceName: string, subResourceName: string) {
-    if (typeof subResourceName === 'undefined') {
-      return this.getDetailUrl(resourceName, id);
+  public getSubResourceUrlById(id: string, resourceKey: string, subResourceKey: string) {
+    if (typeof subResourceKey === 'undefined') {
+      return this.getDetailUrl(resourceKey, id);
     }
-    return `${this.getDetailUrl(resourceName, id)}/${subResourceName}`;
+    return `${this.getDetailUrl(resourceKey, id)}/${subResourceKey}`;
+  }
+
+  // 获取某个具体 resource 对象下的具体的某个子resource 对象
+  //  例如研发部门的张三用户，dept/yanfaID/user/zhangsanID
+  public getSubResourceUrlBySubId(resourceKey: string, subResourceKey: string, id: string, subId: string) {
+    return `${this.getSubResourceUrlById(resourceKey, subResourceKey, id)}/${subId}`;
+  }
+
+  //  获取 孙resource 的 url
+  // 例如研发部门张三的虚拟机，dept/yanfaId/user/zhangsanId/vm
+  public getSubSonResourceUrlById(
+    id: string,
+    subId: string,
+    resourceKey: string,
+    subResourceKey: string,
+    subSonResourceKey: string
+  ) {
+    if (typeof subSonResourceKey === 'undefined') {
+      return this.getSubResourceUrlBySubId(resourceKey, subResourceKey, id, subId);
+    }
+    return `${this.getSubResourceUrlBySubId(resourceKey, subResourceKey, id, subId)}/${subSonResourceKey}`;
+  }
+
+  //  获取 孙resource 的 url
+  // 例如研发部门张三的虚拟机，dept/yanfaId/user/zhangsanId/vm/vmid
+  public getSubSonResourceUrlBySonId(
+    id: string,
+    subId: string,
+    subSonId: string,
+    resourceKey: string,
+    subResourceKey: string,
+    subSonResourceKey: string
+  ) {
+    return `${this.getSubSonResourceUrlById(id, subId, resourceKey, subResourceKey, subSonResourceKey)}/${subSonId}`;
   }
 
   // 根据baseurl 与 resource key 生成 url
@@ -93,7 +106,7 @@ export default class BaseClient implements ClientDef {
       [queryName: string]: (url: string, data?: object, params?: object, conf?: object) => void;
     } = {
       get: (url: string, data = {}, params = {}, conf = {}) =>
-        this.originHttpRequest.get(this.getUrl(url), params, conf),
+        this.originHttpRequest.get(this.getUrl(url), data, params, conf),
       post: (url: string, data = {}, params = {}, conf = {}) =>
         this.originHttpRequest.post(this.getUrl(url), data, params, conf),
       put: (url: string, data = {}, params = {}, conf = {}) =>
@@ -107,44 +120,165 @@ export default class BaseClient implements ClientDef {
     return allMethodReq;
   }
 
+  //  ========Resource 的生成========
+
   /**
    * generate resource api http request for all method by resourceKey
-   * @param resourceName resource name
+   * @param resourceKey resource name
    * @param resourceKey request url
    * @param responseKey need response key name
    * @returns {} wrapped all methods of http requests for resource
    */
-  private genResource = (resourceName: string, resourceKey: string, responseKey: string) => {
+  private genResource(resourceKey: string, responseKey: string): BaseResourceReqDef {
     // resourceKey 用来添加 url
     const resourceUrl: string = resourceKey;
     const resourceReq: BaseResourceReqDef = {
       list: (params = {}, conf = {}) => this.request.get(resourceUrl, undefined, params, conf),
       listDetail: (params = {}, conf = {}) => this.request.get(`${resourceUrl}/detail`, undefined, params, conf),
       show: (id: string, params = {}, conf = {}) =>
-        this.request.get(this.getDetailUrl(id, resourceName), undefined, params, conf),
+        this.request.get(this.getDetailUrl(id, resourceKey), undefined, params, conf),
       create: (data = {}, params = {}, conf = {}) => this.request.post(resourceUrl, data, params, conf),
-      // update: (id:number, data={}, params = {}, conf={}) =>
-      //   this.request.put(this.getDetailUrl(resourceName, id), data, conf),
-      // patch: (id, data, ...args) =>
-      //   this.request.patch(this.getDetailUrl(resourceName, id), data, ...args),
-      // delete: (id, ...args) =>
-      //   this.request.delete(this.getDetailUrl(resourceName, id), ...args),
-      // head: (id, ...args) =>
-      //   this.request.head(this.getDetailUrl(resourceName, id), ...args),
+      update: (id: string, data: object, params = {}, conf = {}) =>
+        this.request.put(this.getDetailUrl(resourceKey, id), data, params, conf),
+      patch: (id: string, data: object, params = {}, conf = {}) =>
+        this.request.patch(this.getDetailUrl(resourceKey, id), data, params, conf),
+      delete: (id: string, params = {}, conf = {}) =>
+        this.request.delete(this.getDetailUrl(resourceKey, id), undefined, params, conf),
+      head: (id: string, params = {}, conf = {}) =>
+        this.request.head(this.getDetailUrl(resourceKey, id), undefined, params, conf),
       responseKey,
+      extend: {},
+      subs: {},
     };
     return resourceReq;
+  }
+
+  /**
+   * generate Sub Resource api http request for all method by resourceKey
+   * @param resourceKey resource name
+   * @param subResourceKey request url
+   * @param responseKey need response key name
+   * @returns {} wrapped all methods of http requests for resource
+   */
+  private genSubResource = (resourceKey: string, subResourceKey: string, responseKey: string) => {
+    const subResourceReq: BaseSubResourceReqDef = {
+      list: (id: string, params = {}, conf = {}) =>
+        this.request.get(this.getSubResourceUrlById(resourceKey, subResourceKey, id), undefined, params, conf),
+      listDetail: (id: string, params = {}, conf = {}) =>
+        this.request.get(
+          `${this.getSubResourceUrlById(resourceKey, subResourceKey, id)}/detail`,
+          undefined,
+          params,
+          conf
+        ),
+      show: (id: string, subId, params = {}, conf = {}) =>
+        this.request.get(
+          this.getSubResourceUrlBySubId(resourceKey, subResourceKey, id, subId),
+          undefined,
+          params,
+          conf
+        ),
+      create: (id: string, data: object, params = {}, conf = {}) =>
+        this.request.post(this.getSubResourceUrlById(resourceKey, subResourceKey, id), data, params, conf),
+      update: (id: string, subId: string, data: object, params = {}, conf = {}) =>
+        this.request.put(this.getSubResourceUrlBySubId(resourceKey, subResourceKey, id, subId), data, params, conf),
+      patch: (id: string, subId: string, data: object, params = {}, conf = {}) =>
+        this.request.patch(this.getSubResourceUrlBySubId(resourceKey, subResourceKey, id, subId), data, params, conf),
+      delete: (id: string, subId: string, params = {}, conf = {}) =>
+        this.request.delete(
+          this.getSubResourceUrlBySubId(resourceKey, subResourceKey, id, subId),
+          undefined,
+          params,
+          conf
+        ),
+      head: (id: string, subId: string, params = {}, conf = {}) =>
+        this.request.head(
+          this.getSubResourceUrlBySubId(resourceKey, subResourceKey, id, subId),
+          undefined,
+          params,
+          conf
+        ),
+      responseKey,
+      subs: {},
+    };
+    return subResourceReq;
   };
 
-  private genSubResource = () => '';
+  private genSubSonResource = (
+    resourceKey: string,
+    subResourceKey: string,
+    subSonResourceKey: string,
+    responseKey: string
+  ) => {
+    const subSonResourceReq: BaseSubSonResourceReqDef = {
+      list: (id: string, subId: string, params = {}, conf = {}) =>
+        this.request.get(
+          this.getSubSonResourceUrlById(resourceKey, subResourceKey, subSonResourceKey, id, subId),
+          undefined,
+          params,
+          conf
+        ),
+      listDetail: (id: string, subId: string, params = {}, conf = {}) =>
+        this.request.get(
+          `${this.getSubSonResourceUrlById(resourceKey, subResourceKey, subSonResourceKey, id, subId)}/detail`,
+          undefined,
+          params,
+          conf
+        ),
 
-  private genSubSubResource = () => '';
+      show: (id: string, subId: string, subSubId: string, params = {}, conf = {}) =>
+        this.request.get(
+          this.getSubSonResourceUrlBySonId(id, subId, subSubId, resourceKey, subResourceKey, subSonResourceKey),
+          undefined,
+          params,
+          conf
+        ),
+      create: (id: string, subId: string, data: object, params = {}, conf = {}) =>
+        this.request.post(
+          this.getSubSonResourceUrlById(resourceKey, subResourceKey, subSonResourceKey, id, subId),
+          data,
+          params,
+          conf
+        ),
+      update: (id: string, subId: string, subSubId: string, data: object, params = {}, conf = {}) =>
+        this.request.put(
+          this.getSubSonResourceUrlBySonId(id, subId, subSubId, resourceKey, subResourceKey, subSonResourceKey),
+          data,
+          params,
+          conf
+        ),
+      patch: (id: string, subId: string, subSubId: string, data: object, params = {}, conf = {}) =>
+        this.request.patch(
+          this.getSubSonResourceUrlBySonId(id, subId, subSubId, resourceKey, subResourceKey, subSonResourceKey),
+          data,
+          params,
+          conf
+        ),
+      delete: (id: string, subId: string, subSubId: string, params = {}, conf = {}) =>
+        this.request.delete(
+          this.getSubSonResourceUrlById(resourceKey, subResourceKey, subSonResourceKey, id, subId),
+          undefined,
+          params,
+          conf
+        ),
+      head: (id: string, subId: string, subSubId: string, params = {}, conf = {}) =>
+        this.request.head(
+          this.getSubSonResourceUrlBySonId(id, subId, subSubId, resourceKey, subResourceKey, subSonResourceKey),
+          undefined,
+          params,
+          conf
+        ),
+      responseKey,
+    };
+    return subSonResourceReq;
+  };
 
   private genAllResource = () => {
     this.resources.forEach((resource: ResourcesDef) => {
-      const { name, key, responseKey, subResources = [], isResource = true, extendOperations = [] } = resource;
+      const { name, key, responseKey, subResources = [], extendOperations = [] } = resource;
       // 生成 获取 resource 的所有 request 接口，例如 get=>list create=>post ...
-      const result: BaseResourceReqDef = isResource ? this.genResource(name, key, responseKey) : {};
+      const result: BaseResourceReqDef = this.genResource(key, responseKey);
+      // this.allResources = isResource ? this.genResource(key, responseKey) : {};
       // extendOperations 表示常用的这些操作外，还有什么具体的 request 请求
       extendOperations.forEach((operation: ExtendOperationsDef) => {
         const { otherKey, otherName, method = 'get', isDetail, generateFunc } = operation;
@@ -152,41 +286,47 @@ export default class BaseClient implements ClientDef {
         const subIsDetail = !!isDetail;
         if (generateFunc) {
           //  这里是 定义好的 request 函数
-          result[otherName] = generateFunc;
+          Object.defineProperty(result.extend, otherName, { value: generateFunc });
         } else if (subIsDetail) {
           //  获取 详情页的 子资源 的 request 函数
-          result[otherName] = (id: string, args?: object) =>
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-return
-            this.request[method.toLowerCase()](this.getSubResourceUrlById(id, name, otherName), args);
+          Object.defineProperty(result.extend, otherName, {
+            value: (id: string, args?: object) =>
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-return
+              this.request[method.toLowerCase()](this.getSubResourceUrlById(id, otherKey, otherName), args),
+          });
         } else {
           //  获取 子资源的 request 函数
-          result[otherName] = (...args: object[]) =>
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-return
-            this.request[method.toLowerCase()](this.getSubResourceUrl(name, otherName), ...args);
+          Object.defineProperty(result.extend, otherName, {
+            value: (args: object) => this.request[method.toLowerCase()](this.getSubResourceUrl(key, otherKey), args),
+          });
         }
       });
       //  subResource 表示 资源下的子资源，url 有嵌套关系，例如 部门/用户
       //  最多嵌套两个 subResource /部门/用户/配额
       subResources.forEach((subResource) => {
-        let subResult: BaseResourceReqDef;
         const {
           name: subName,
           key: subKey,
           responseKey: subResponseKey,
           subResources: subSubResources = [],
         } = subResource;
-        subResult = this.genSubSubResource(key, subKey, subResponseKey);
 
-        //  二级  子资源
-        subSubResources.forEach((son) => {
-          const { name: subSubName, key: subSubKey, responseKey: subSubResponseKey } = son;
-          subResult[subSubName] = this.generateSubSonResource(key, subKey, subSubKey, subSubResponseKey);
+        const subResult: BaseSubResourceReqDef = this.genSubResource(key, subKey, subResponseKey);
+
+        // 二级  子资源
+        subSubResources.forEach((subSonRes) => {
+          const { key: subSonKey, name: subSonName, responseKey: subSonResponseKey } = subSonRes;
+          Object.defineProperty(subResult.subs, subSonName, {
+            value: this.genSubSonResource(key, subKey, subSonKey, subSonResponseKey),
+          });
+          // subResult[subSonName] = this.genSubSonResource(key, subKey, subSonKey, subSonResponseKey);
         });
-        result[subName] = subResult;
+        Object.defineProperty(result.subs, subName, { value: subResult });
+        // result[subName] = subResult;
       });
-
       // 将生成的各个资源的 request 请求，放到 baseClient 类的属性中
-      this[name] = result;
+      Object.defineProperty(this.allResources, name, { value: result });
+      // this[name] = result;
     });
   };
 }
